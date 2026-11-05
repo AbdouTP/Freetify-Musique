@@ -1,0 +1,46 @@
+name: Build IPA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Afficher la version de Xcode
+        run: |
+          xcodebuild -version
+          ls /Applications | grep -i xcode
+
+      - name: Installer XcodeGen
+        run: brew install xcodegen
+
+      - name: Générer le projet Xcode
+        run: xcodegen generate
+
+      - name: Compiler (sans signature)
+        run: |
+          xcodebuild \
+            -project MRSC.xcodeproj \
+            -scheme MRSC \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Créer le .ipa
+        run: |
+          mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/MRSC.app Payload/
+          zip -r MRSC.ipa Payload
+
+      - name: Envoyer l'artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MRSC-ipa
+          path: MRSC.ipa
