@@ -1,146 +1,87 @@
-name: MRSC
+name: FreetifyMusique
+
 options:
-  bundleIdPrefix: com.ecki
+  bundleIdPrefix: com.abdoutp
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+  developmentLanguage: fr
+  generateEmptyDirectories: true
+
 settings:
   base:
-    # Bump CURRENT_PROJECT_VERSION for every TestFlight upload; app and widget share both.
-    MARKETING_VERSION: "1.0"
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0.0"
     CURRENT_PROJECT_VERSION: "1"
+    IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+
 targets:
-  MRSC:
+  FreetifyMusique:
     type: application
     platform: iOS
-    deploymentTarget: "26.0"
+    sources:
+      - path: Sources
+      - path: Resources
     info:
-      path: MRSC/Info.plist
+      path: Config/Info.plist
       properties:
-        CFBundleDisplayName: MRSC
-        CFBundleShortVersionString: $(MARKETING_VERSION)
-        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleDisplayName: Freetify Musique
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        LSRequiresIPhoneOS: true
+        NSAppleMusicUsageDescription: Freetify Musique lit vos playlists Apple Music pour les recréer dans l'app. Les morceaux en streaming protégés ne peuvent pas être copiés.
+        NSHumanReadableCopyright: Dev by AbdouTP
         ITSAppUsesNonExemptEncryption: false
-        UILaunchScreen: {}
-        UIBackgroundModes: [audio]
-        NSSpeechRecognitionUsageDescription: MRSC recognises lyrics in your songs on this device.
-        # ShazamKit (Search ▸ Shazam button). The App ID also needs the ShazamKit App Service in the developer portal.
-        NSMicrophoneUsageDescription: MRSC listens briefly to recognize the song playing near you with Shazam. Nothing is recorded or kept.
-        NSAppleMusicUsageDescription: MRSC looks up animated album covers in the Apple Music catalog. Nothing from your library is shared.
-        UIFileSharingEnabled: true
-        LSSupportsOpeningDocumentsInPlace: true
-        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
-        # iPad runs natively and resizable (Split View, Stage Manager), which needs every orientation.
-        UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
-        NSSupportsLiveActivities: true
-        NSLocalNetworkUsageDescription: MRSC connects to your music server on your network to stream and download your music.
-        # Self-hosted servers often run plain HTTP. NSAllowsLocalNetworking would make iOS ignore NSAllowsArbitraryLoads.
-        NSAppTransportSecurity:
-          NSAllowsArbitraryLoads: true
-        UIApplicationShortcutItems:
-          - UIApplicationShortcutItemType: com.ecki.mrsc.goodbye
-            UIApplicationShortcutItemTitle: Goodbye — see you soon
-            UIApplicationShortcutItemSubtitle: Thanks for listening
-            UIApplicationShortcutItemIconSymbolName: hand.wave
+        UIBackgroundModes:
+          - audio
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
-          UISceneConfigurations:
-            CPTemplateApplicationSceneSessionRoleApplication:
-              - UISceneClassName: CPTemplateApplicationScene
-                UISceneConfigurationName: CarPlay
-                UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).CarPlaySceneDelegate
-        UTExportedTypeDeclarations:
-          - UTTypeIdentifier: com.ecki.mrsc.theme
-            UTTypeDescription: MRSC Theme
-            UTTypeConformsTo: [public.json, public.data]
-            UTTypeTagSpecification:
-              public.filename-extension: [mrsctheme]
-              public.mime-type: [application/x-mrsc-theme]
-        UTImportedTypeDeclarations:
-          - UTTypeIdentifier: com.ecki.mrsc.8spine-module
-            UTTypeDescription: MRSC Server Extension
-            UTTypeConformsTo: [public.plain-text]
-            UTTypeTagSpecification:
-              public.filename-extension: [8spine]
-        CFBundleDocumentTypes:
-          - CFBundleTypeName: MRSC Theme
-            CFBundleTypeRole: Viewer
-            LSHandlerRank: Owner
-            LSItemContentTypes: [com.ecki.mrsc.theme]
-          - CFBundleTypeName: MRSC Server Extension
-            CFBundleTypeRole: Viewer
-            LSHandlerRank: Alternate
-            LSItemContentTypes: [com.ecki.mrsc.8spine-module]
-        CFBundleURLTypes:
-          - CFBundleURLName: com.ecki.mrsc
-            CFBundleURLSchemes: [mrsc, eightspine]
-    sources: [MRSC, Shared]
-    dependencies:
-      - target: MRSCWidgets
-        embed: true
-      - target: MRSCShare
-        embed: true
+        UILaunchScreen:
+          UIColorName: Background
+          UIImageName: Logo
+        UIRequiredDeviceCapabilities:
+          - arm64
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIUserInterfaceStyle: Dark
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.ecki.mrsc
-        DEVELOPMENT_TEAM: F6L6CQBQGR
-        SWIFT_VERSION: 6.0
-        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
-        SWIFT_APPROACHABLE_CONCURRENCY: YES
-        TARGETED_DEVICE_FAMILY: "1,2"
-        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
-        INFOPLIST_KEY_UILaunchScreen_Generation: YES
-        ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.abdoutp.freetifymusique
+        PRODUCT_NAME: FreetifyMusique
+        TARGETED_DEVICE_FAMILY: "1"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES: "AppIcon-Orange AppIcon-Green AppIcon-Blue AppIcon-Violet AppIcon-Black"
-        CODE_SIGN_ENTITLEMENTS: MRSC/MRSC.entitlements
-        "CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]": MRSC/MRSC-Simulator.entitlements
-  MRSCWidgets:
-    type: app-extension
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        SUPPORTS_MACCATALYST: NO
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_EMIT_LOC_STRINGS: NO
+
+  FreetifyMusiqueTests:
+    type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "26.0"
-    info:
-      path: MRSCWidgets/Info.plist
-      properties:
-        CFBundleDisplayName: MRSC
-        CFBundleShortVersionString: $(MARKETING_VERSION)
-        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        NSExtension:
-          NSExtensionPointIdentifier: com.apple.widgetkit-extension
-    sources: [MRSCWidgets, Shared]
+    sources:
+      - path: Tests
+    dependencies:
+      - target: FreetifyMusique
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.ecki.mrsc.widgets
-        DEVELOPMENT_TEAM: F6L6CQBQGR
-        SWIFT_VERSION: 6.0
-        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
-        SWIFT_APPROACHABLE_CONCURRENCY: YES
-        TARGETED_DEVICE_FAMILY: "1,2"
-        CODE_SIGN_ENTITLEMENTS: MRSCWidgets/MRSCWidgets.entitlements
-        SKIP_INSTALL: YES
-  # Share ▸ MRSC for playlist links from other apps; hands the link to the app's song-list import.
-  MRSCShare:
-    type: app-extension
-    platform: iOS
-    deploymentTarget: "26.0"
-    info:
-      path: MRSCShare/Info.plist
-      properties:
-        CFBundleDisplayName: MRSC
-        CFBundleShortVersionString: $(MARKETING_VERSION)
-        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        NSExtension:
-          NSExtensionPointIdentifier: com.apple.share-services
-          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
-          NSExtensionAttributes:
-            NSExtensionActivationRule:
-              NSExtensionActivationSupportsWebURLWithMaxCount: 1
-              NSExtensionActivationSupportsText: true
-    sources: [MRSCShare]
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.ecki.mrsc.share
-        DEVELOPMENT_TEAM: F6L6CQBQGR
-        SWIFT_VERSION: 6.0
-        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
-        SWIFT_APPROACHABLE_CONCURRENCY: YES
-        TARGETED_DEVICE_FAMILY: "1,2"
-        CODE_SIGN_ENTITLEMENTS: MRSCShare/MRSCShare.entitlements
-        SKIP_INSTALL: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.abdoutp.freetifymusique.tests
+        GENERATE_INFOPLIST_FILE: YES
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGNING_ALLOWED: NO
+
+schemes:
+  FreetifyMusique:
+    build:
+      targets:
+        FreetifyMusique: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - FreetifyMusiqueTests
+    profile:
+      config: Release
+    archive:
+      config: Release

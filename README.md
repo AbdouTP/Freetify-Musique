@@ -1,84 +1,136 @@
-# MRSC
+# Freetify Musique
 
-The music player with way too many settings.
+*Dev by AbdouTP*
 
-MRSC is a free, offline music player for iPhone, built for iOS 26 with Liquid Glass. It plays the music you own: files on your iPhone, a folder that stays in sync, or your own Jellyfin, Navidrome or Subsonic server. No ads, no subscription, no account.
+Application musicale iOS native (SwiftUI + AVFoundation), **lecture 100 % hors connexion** : tu importes ou télécharges tes musiques, elles sont copiées dans l'app, et tout fonctionne en mode avion. Seul l'onglet Découvrir se connecte à Internet, uniquement pour chercher et télécharger.
 
-[Website](https://mrsc.pages.dev) · [Discord](https://discord.gg/kZTTJxjvQW) · [Buy a coffee](https://ko-fi.com/henrikkk)
+- Bundle ID : `com.abdoutp.freetifymusique` — version `1.0.0` (build `1`) — iOS 17+, iPhone, portrait
+- Couleurs : violet `#8B35F5`, violet foncé `#171324`, vert `#A7F36B`, fond `#100D18`
 
-<p align="center">
-  <img src="website/img/player-mrsc.webp" width="180" alt="The player">
-  <img src="website/img/home-mrsc.webp" width="180" alt="Home">
-  <img src="website/img/lyrics.webp" width="180" alt="Word-by-word lyrics">
-  <img src="website/img/customize.webp" width="180" alt="Customize">
-</p>
+> ⚠️ Ce code a été écrit sans Mac ni Xcode : il a été vérifié syntaxiquement mais **pas compilé**. La première compilation sur Codemagic est le vrai test. Si elle échoue, copie-moi les lignes `error:` du log et je corrige.
 
-## What's in it
+---
 
-- Seven built-in themes and a full theme editor: colors, fonts, textures, cover shape, player layout, button row, tab bar, Home screen, app icon
-- Synced, word-by-word lyrics, recognized on the device when a song has none, with on-device translation
-- 10-band EQ per headphone, song or album, loudness normalization, crossfade, gapless playback, beat-matched transitions
-- Smart search in plain English or German, daily mixes made on the device
-- CarPlay, widgets, Live Activity, Siri and Shortcuts
+## Structure
 
-## Building
-
-You need Xcode 26 and [XcodeGen](https://github.com/yonaskolb/XcodeGen). The Xcode project is generated from `project.yml`.
-
-```bash
-brew install xcodegen
-xcodegen generate
-open MRSC.xcodeproj
+```
+project.yml                 XcodeGen (génère FreetifyMusique.xcodeproj)
+codemagic.yaml              2 workflows : sans signature / signé
+scripts/pick_simulator.py   choisit un simulateur pour les tests (Codemagic)
+Config/                     Info.plist généré par XcodeGen (ne pas éditer)
+Resources/Assets.xcassets   icône, logo, couleurs
+Sources/
+  App/        FreetifyApp, RootView (onglets, import, alertes)
+  Theme/      couleurs et styles
+  Models/     Track, Playlist, Album/Artist dérivés
+  Services/   LibraryStore (JSON), ImportService, MetadataReader, PlayQueue,
+              PlayerService (AVPlayer + écran verrouillé), Recommender, SearchService
+  Views/      Home, Library, Detail, Player, Search, Settings, Components
+Tests/        tests unitaires (file d'attente, recherche, bibliothèque, import…)
 ```
 
-To run it on your own iPhone, change `DEVELOPMENT_TEAM` and the bundle identifiers in `project.yml` to your own, then generate again.
+## Fonctionnalités
 
-## Layout
+- **Accueil** : écoutés récemment, playlists favorites, albums, « Pour vous » (calculé uniquement depuis ta bibliothèque et ton historique), accès rapides.
+- **Bibliothèque** : musiques (tri), albums, artistes, playlists, favoris, historique.
+- **Import** : sélecteur de fichiers iOS (multi-sélection), MP3 / M4A / AAC / WAV / AIFF / FLAC. Copie dans `Application Support/Freetify/Music`, métadonnées (titre, artiste, album, pochette) lues par AVFoundation, repli sur le nom de fichier (« Artiste - Titre »). Doublons détectés par empreinte SHA-256. Le fichier d'origine n'est plus jamais utilisé.
+- **Lecteur** : lecture/pause, suivant/précédent, barre de progression, ±15 s, aléatoire, répétition (off / tout / une), file d'attente (lire ensuite, ajouter, réordonner, retirer, vider), pochette, mini-lecteur, lecture en arrière-plan, écran verrouillé et Centre de contrôle, interruptions (appels…) et débranchement des écouteurs.
+- **Playlists** : créer, renommer, supprimer, ajouter/retirer/réordonner, pochette choisie dans tes photos (sans permission) ou mosaïque automatique, favoris.
+- **Recherche** instantanée (titres, artistes, albums, playlists), insensible à la casse et aux accents.
+- **Réglages** : stockage utilisé, compteurs, gestion/suppression (sélection multiple, tout supprimer, réinitialiser), effacer l'historique, thème sombre (toujours actif).
 
-- `MRSC/`: the app (SwiftUI)
-- `MRSCWidgets/`: widgets and the Live Activity
-- `Shared/`: code used by both
-- `website/`: the static site at mrsc.pages.dev (see `website/README.md`)
-- `Branding/wordmark/`: the brushed MRSC letters, turned into `MRSC/WordmarkData.swift`
-- `docs/`: notes on the app's structure and TestFlight
+- **Découvrir** : recherche et téléchargement de musique **libre et légale** (Jamendo, licences Creative Commons) avec ajout automatique à la bibliothèque. C'est la seule page qui utilise Internet ; une fois téléchargés, les titres se lisent hors connexion et s'ajoutent aux playlists comme les autres.
+- **Import de playlists Apple Music** (Réglages ou Bibliothèque → Playlists) : lit tes playlists de l'app Musique et les recrée dans Freetify.
 
-## Server extensions
+Permissions demandées : **accès à la médiathèque Musique**, uniquement pour l'import de playlists Apple Music (demandée au moment où tu ouvres cet écran). Le mode d'arrière-plan « Audio » est aussi déclaré.
 
-MRSC can load extensions: small JavaScript files that connect it to a music server or API. MRSC doesn't include any, and this repo doesn't either. Please don't open pull requests that add extensions for services you don't have the rights to.
+## Découvrir : clé Jamendo (gratuite)
 
-Artist pages combine synced server songs and local files with enabled extensions automatically. Extensions can provide `getArtistTracks(name, ctx)` to return their full artist catalog, handling any server pagination themselves. Otherwise MRSC uses `searchTracks(name, 500, ctx)`, whose results may be limited by the provider. Returning `albumId` (or an album object with `id`) lets MRSC fill in albums through `getAlbum(id, ctx)`. Tracks can also include `albumArtist`, `trackNumber` and `year`. Browsing these results does not add them to the library.
+1. Crée un compte sur <https://developer.jamendo.com>, puis une application pour obtenir un **Client ID**.
+2. Dans l'app, onglet **Découvrir**, colle le Client ID. Il reste uniquement sur ton iPhone (pas dans le dépôt).
 
-## Contributing
+Pourquoi pas YouTube ? Télécharger des vidéos ou de l'audio YouTube est interdit par ses conditions d'utilisation et par le droit d'auteur ; l'API officielle ne fournit d'ailleurs que de la recherche et des métadonnées, pas les fichiers. Jamendo propose à la place des centaines de milliers de titres téléchargeables légalement. Chaque titre garde sa licence (affichée dans la liste) : beaucoup sont « NC » (usage non commercial), donc pour un usage personnel uniquement.
 
-Bug reports and ideas are welcome as issues. Pull requests too, especially if you think there aren't enough settings yet. For quick questions and sharing themes, the Discord is the better place.
+## Import de playlists Apple Music : ce qui est possible
 
-## License
+Apple protège (DRM) les morceaux d'un abonnement Apple Music : leur fichier audio n'est pas accessible aux apps, et il n'existe aucun moyen légitime de les copier. Freetify fait donc ceci :
 
-The code is licensed under the [GNU General Public License v3.0](LICENSE). If you ship a modified version, its source has to be open too.
+1. Morceau déjà présent dans Freetify (même titre, même artiste, durée proche) : repris dans la playlist.
+2. Morceau présent sur l'iPhone **sans protection** (acheté sur iTunes, ou ajouté depuis un ordinateur) : copié dans Freetify (converti en M4A), puis ajouté à la playlist.
+3. Morceau en streaming ou protégé : **non importable** ; il est listé dans le rapport de fin d'import, sans être copié.
 
-The name MRSC and the MRSC logo are not part of that license. If you publish your own build, please give it a different name and icon.
+Astuce : importe d'abord tes fichiers audio dans Freetify, puis lance l'import des playlists : les titres correspondants seront retrouvés automatiquement.
+Pour que tes playlists apparaissent, « Synchroniser la bibliothèque » doit être activé dans Réglages → Musique.
 
-### Photos
+## Limites connues
 
-The Browse Categories photos in `MRSC/Assets.xcassets/Browse` are from [Unsplash](https://unsplash.com) under the [Unsplash License](https://unsplash.com/license), not the GPL. Thanks to:
+- Les albums sont regroupés par *titre d'album + artiste* ; les compilations dont l'artiste varie par piste sont éclatées. Sans album, les titres sont regroupés par artiste (« Album inconnu »).
+- Pas de numéro de piste : l'ordre dans un album suit l'ordre d'import.
+- FLAC : lu si iOS décode le fichier ; les tags FLAC ne sont pas toujours lus (repli sur le nom de fichier). Un fichier illisible est refusé à l'import avec un message.
+- Si tu réinstalles l'app (et non « rafraîchir »), le conteneur est effacé : il faut réimporter. C'est une règle d'iOS.
+- Le thème clair n'existe pas (thème sombre uniquement).
 
-| Category | Photographer |
-|---|---|
-| Pop | [Aditya Chinchure](https://unsplash.com/photos/ZhQCZjr9fHo) |
-| Hip-Hop/Rap | [Gordon Cowie](https://unsplash.com/photos/qQzw8jPvip8) |
-| Rock | [Sui Xu](https://unsplash.com/photos/HjZjNx19snU) |
-| Dance | [Aleksandr Popov](https://unsplash.com/photos/hTv8aaPziOQ) |
-| R&B/Soul | [Josh Rocklage](https://unsplash.com/photos/HAAsKeZbHAc) |
-| Alternative | [Marco Mons](https://unsplash.com/photos/DIXT8Z9p-Sg) |
-| Electronic | [Marcela Laskoski](https://unsplash.com/photos/YrtFlrLo2DQ) |
-| Folk | [Alicia Christin Gerald](https://unsplash.com/photos/_kRuNyxq-Eo) |
-| Metal | [Peter Trones](https://unsplash.com/photos/snQrRRYLs90) |
-| Jazz | [Chris Bair](https://unsplash.com/photos/A10y2Eq7OHY) |
-| Classical | [Larisa Birta](https://unsplash.com/photos/slbOcNlWNHA) |
-| Country | [JosephHershMedia](https://unsplash.com/photos/1ZAduPYISHI) |
-| Latin | [Preillumination SeTh](https://unsplash.com/photos/n3NjosrCeLs) |
-| Reggae | [Royce Fonseca](https://unsplash.com/photos/gtJYJTy9xSc) |
-| Blues | [Jeremy Allouche](https://unsplash.com/photos/YStboKiFPVw) |
-| Punk | [Natalie Parham](https://unsplash.com/photos/fPKqpUbTL4Y) |
-| Soundtrack | [Jeremy Yap](https://unsplash.com/photos/J39X2xX_8CQ) |
-| Schlager | [Jason Leung](https://unsplash.com/photos/Xaanw0s0pMk) |
+## Logo
+
+Le logo est la note de musique violette néon fournie par AbdouTP. Pour le changer :
+
+- Icône de l'app : remplace `Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png` (PNG 1024×1024, **sans transparence**).
+- Logo dans l'app et écran de lancement : remplace `Resources/Assets.xcassets/Logo.imageset/logo.png` (PNG transparent, ~512 px).
+
+---
+
+## 1. Mettre le projet dans ton dépôt (depuis Windows)
+
+1. Décompresse le ZIP dans ton dossier local du dépôt `freetifymusique`.
+2. Dans un terminal : `git add .` puis `git commit -m "Freetify Musique"` puis `git push`.
+
+## 2. Compiler sur Codemagic
+
+1. Va sur <https://codemagic.io>, connecte-toi avec GitHub, **Add application** → choisis `AbdouTP/freetifymusique`.
+2. Type de projet : choisis la configuration **codemagic.yaml** (pas le « Workflow Editor »).
+3. Lance un build : **Start new build** → branche `main` → workflow **« 1 - Compilation sans signature (IPA pour AltStore) »**.
+4. Attends la fin (~10 min). En cas d'échec, le log affiche un bloc `ERREURS DE COMPILATION` avec les lignes `error:`.
+5. Dans **Artifacts**, télécharge `FreetifyMusique-unsigned.ipa`.
+
+Les tests unitaires tournent dans ce workflow mais **ne bloquent pas** l'IPA ; regarde l'étape « Tests unitaires » pour voir leur résultat.
+
+### Workflow 2 : compilation signée
+
+Il produit un IPA déjà signé, mais il demande un certificat de développement `.p12` et un profil `.mobileprovision` qui incluent ton iPhone. **Avec un compte Apple gratuit tu ne peux pas obtenir ces fichiers depuis Windows** : utilise donc le workflow 1 + AltStore/Sideloadly. Si un jour tu as un compte payant, crée un groupe de variables `signing` dans Codemagic avec `CM_CERTIFICATE` (base64 du .p12), `CM_CERTIFICATE_PASSWORD` et `CM_PROVISIONING_PROFILE` (base64 du profil). Base64 sous Windows (PowerShell) :
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\chemin\fichier.p12"))
+```
+
+Rien de secret n'est dans le dépôt (`.gitignore` bloque `.p12`, `.mobileprovision`, etc.).
+
+## 3. Installer l'IPA sur ton iPhone 13 Pro avec un compte Apple gratuit
+
+Un compte gratuit ne permet pas la distribution App Store ni TestFlight. La méthode compatible est le *sideloading* : l'outil signe l'IPA **avec ton propre compte** et l'installe.
+
+Limites d'un compte gratuit (à vérifier sur la doc de l'outil, elles évoluent) :
+- l'app **expire au bout de 7 jours** : il faut la « rafraîchir » (AltStore le fait automatiquement quand ton PC est allumé, sur le même Wi-Fi) ;
+- 3 apps actives maximum avec AltStore, et un nombre limité d'identifiants d'app par semaine ;
+- AltStore/Sideloadly modifient légèrement l'identifiant de l'app (suffixe) : c'est normal.
+
+### Option A : Sideloadly (la plus simple sous Windows)
+
+1. Installe **iTunes** et **iCloud** depuis le site d'Apple (pas la version Microsoft Store), puis Sideloadly depuis <https://sideloadly.io>.
+2. Branche l'iPhone en USB, appuie sur « Faire confiance ».
+3. Glisse `FreetifyMusique-unsigned.ipa` dans Sideloadly, saisis ton Apple ID, clique **Start**.
+4. Sur l'iPhone : **Réglages → Général → VPN et gestion de l'appareil** → fais confiance à ton profil développeur.
+5. Active le **Mode développeur** si iOS le demande : **Réglages → Confidentialité et sécurité → Mode développeur** (redémarrage requis).
+
+### Option B : AltStore
+
+1. Installe iTunes et iCloud (versions du site d'Apple) puis **AltServer pour Windows** (<https://altstore.io>).
+2. Branche l'iPhone, icône AltServer (barre des tâches) → **Install AltStore** → ton iPhone.
+3. Mode développeur + confiance dans le profil (comme ci-dessus).
+4. Envoie l'IPA sur l'iPhone (AirDrop impossible depuis Windows : mets-le dans iCloud Drive ou envoie-le par un moyen de ton choix), ouvre-le avec AltStore → **My Apps → +** → sélectionne l'IPA.
+
+Je n'ai pas pu vérifier ici la compatibilité de ces outils avec iOS 26 ; regarde les notes de version sur leurs sites avant d'installer.
+
+### Utiliser l'app
+
+1. Ouvre Freetify Musique → **Importer des musiques** → choisis tes fichiers (Fichiers, iCloud Drive, etc.).
+2. Une fois importés, tu peux activer le mode avion : tout fonctionne.
